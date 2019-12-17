@@ -37,12 +37,12 @@ fn parse_char_name(s: &str) -> Result<char> {
 
 #[derive(Debug)]
 pub struct Attributes {
-    rows: usize,
-    cols: usize,
+    pub rows: usize,
+    pub cols: usize,
 
-    knit_char: char,
-    purl_char: char,
-    empty_char: char,
+    pub knit_char: char,
+    pub purl_char: char,
+    pub empty_char: char,
 }
 
 impl Attributes {

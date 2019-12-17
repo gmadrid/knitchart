@@ -14,6 +14,10 @@ pub mod errors {
     error_chain! {
         errors {
             // TODO: these errors should contain the character and some context.
+            BadStitchChar {
+                description("Bad stitch char")
+                display("Bad stitch char")
+            }
             BadHeaderLine(line_number: usize) {
                 description("A badly formed header line was found")
                 display("Header line {} should have the form 'name=value'",
@@ -59,7 +63,7 @@ fn process_file(filename: &str) -> Result<()> {
     // let chart = Chart::new(attributes)?;
     let chart = Chart::open(filename)?;
 
-    println!("Chart: \n{:?}", chart);
+    println!("{:?}", chart);
     
     Ok(())
 }
