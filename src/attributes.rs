@@ -64,7 +64,7 @@ impl Attributes {
             PURL_ATTR_NAME => self.purl_char = parse_char_name(value)?,
             EMPTY_ATTR_NAME => self.empty_char = parse_char_name(value)?,
             // TODO: line number in this error.
-            _ => return Err(ErrorKind::UnknownAttrName(name.into()).into())
+            _ => return Err(ErrorKind::UnknownAttrName(name.into()).into()),
         }
         Ok(())
     }

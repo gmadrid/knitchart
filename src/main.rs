@@ -54,17 +54,10 @@ pub mod errors {
 }
 
 fn process_file(filename: &str) -> Result<()> {
-    // TODO: simplify this?
-    // let file = File::open(filename)?;
-    // let mut rdr = BufReader::new(file);
-    // let hdr = Header::new(&mut rdr)?;
-    // let attributes = Attributes::new(hdr)?;
-
-    // let chart = Chart::new(attributes)?;
     let chart = Chart::open(filename)?;
-
-    println!("{:?}", chart);
-    
+    println!("Chart \"{}\":", filename);
+    println!("     rows: {}", chart.rows());
+    println!("  columns: {}", chart.columns());
     Ok(())
 }
 

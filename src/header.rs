@@ -171,7 +171,7 @@ mod test {
     use super::*;
 
     use std::io::BufReader;
-    
+
     #[test]
     fn header_test() {
         let s = "foo=bar\nquux=bam\nblimey=swear";
