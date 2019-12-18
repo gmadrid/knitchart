@@ -7,59 +7,8 @@ use graphics::grid::Grid;
 use graphics::line::Line;
 use graphics_buffer::{RenderBuffer, IDENTITY};
 
-use crate::chart::Chart;
-use crate::chart::Stitch;
-use crate::errors::*;
-
-#[macro_use]
-extern crate error_chain;
-
-mod attributes;
-mod chart;
-mod header;
-
-pub mod errors {
-    error_chain! {
-        errors {
-            // TODO: these errors should contain the character and some context.
-            BadStitchChar {
-                description("Bad stitch char")
-                display("Bad stitch char")
-            }
-            BadHeaderLine(line_number: usize) {
-                description("A badly formed header line was found")
-                display("Header line {} should have the form 'name=value'",
-                        line_number)
-            }
-            IdentInitialNotAlpha(line_number: usize) {
-                description("An identifier has an invalid first character.")
-                display("Identifier on line {} must start with alpha character.",
-                        line_number)
-            }
-            IdentInvalidChar(line_number: usize) {
-                description("An identifier has a non-alnum character.")
-                display("Identifier on line {} contains non-alnum character",
-                        line_number)
-            }
-            InvalidCharName {
-                description("A char was badly named.")
-                display("A char was badly named.")
-            }
-            MissingIdent(line_number: usize) {
-                description("An identifier is missing in the header.")
-                display("Identifier missing on line {}.", line_number)
-            }
-            UnknownAttrName(name: String) {
-                description("Unknown attr name")
-                display("The attr {} is unknown.", name)
-            }
-        }
-        foreign_links {
-            IoError(std::io::Error);
-            ParseIntError(std::num::ParseIntError);
-        }
-    }
-}
+use knitchart::errors::*;
+use knitchart::{Chart, Stitch};
 
 fn the_thing(filename: &str, chart: &Chart) {
     let dot_radius = 10.0;
@@ -118,9 +67,7 @@ fn process_file(filename: &str) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    let files = env::args().skip(1).collect::<Vec<String>>();
-
-    for file in files {
+    for file in env::args().skip(1) {
         process_file(&file)?;
     }
     Ok(())
