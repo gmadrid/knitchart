@@ -16,8 +16,8 @@ pub struct Chart {
     cols: usize,
 }
 
-#[derive(Clone)]
-enum Stitch {
+#[derive(Clone, Copy)]
+pub enum Stitch {
     Knit,
     Purl,
     Empty,
@@ -80,6 +80,10 @@ impl Chart {
     }
     pub fn columns(&self) -> usize {
         self.cols
+    }
+
+    pub fn stitch(&self, row: usize, col: usize) -> Stitch {
+	self.stitches[row][col]
     }
 
     fn read_stitches(
