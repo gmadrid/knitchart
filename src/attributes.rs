@@ -1,6 +1,19 @@
+use css_color_parser::Color as CssColor;
+
 use crate::errors::*;
 use crate::header::Header;
 
+// Notes on new attributes
+//   cellsize = dimensions of cell (square)
+//   background = color of the background
+//   gridcolor = color of the grid
+//   knitcolor = color of the knit marker
+//   purlcolor = color of the purl marker
+//   emptycolor = color of the empty marker
+//   knitmarker = marker used for knits (DOT, X, BLANK)
+//   purlmarker = marker used for purls
+//   emptymarker = marker used for empty cells
+//       Ideally, we won't draw the empty cells.
 const DEFAULT_ROWS: usize = 0; // 0 means whatever the chart says
 const DEFAULT_COLS: usize = 0; // 0 means whatever the chart says
 
@@ -13,6 +26,9 @@ const COLS_ATTR_NAME: &str = "columns";
 const KNIT_ATTR_NAME: &str = "knit";
 const PURL_ATTR_NAME: &str = "purl";
 const EMPTY_ATTR_NAME: &str = "empty";
+
+const BACKGROUND_ATTR_NAME: &str = "backgroundcolor";
+const DEFAULT_BACKGROUND_VALUE: &str = "whitesmoke";
 
 fn parse_char_name(s: &str) -> Result<char> {
     if s.is_empty() {
@@ -43,6 +59,8 @@ pub struct Attributes {
     pub knit_char: char,
     pub purl_char: char,
     pub empty_char: char,
+
+    pub background_color: CssColor,
 }
 
 impl Attributes {
@@ -63,6 +81,7 @@ impl Attributes {
             KNIT_ATTR_NAME => self.knit_char = parse_char_name(value)?,
             PURL_ATTR_NAME => self.purl_char = parse_char_name(value)?,
             EMPTY_ATTR_NAME => self.empty_char = parse_char_name(value)?,
+            BACKGROUND_ATTR_NAME => self.background_color = value.parse()?,
             // TODO: line number in this error.
             _ => return Err(ErrorKind::UnknownAttrName(name.into()).into()),
         }
@@ -78,6 +97,7 @@ impl Default for Attributes {
             knit_char: DEFAULT_KNIT_CHAR,
             purl_char: DEFAULT_PURL_CHAR,
             empty_char: DEFAULT_EMPTY_CHAR,
+            background_color: DEFAULT_BACKGROUND_VALUE.parse().unwrap(),
         }
     }
 }
@@ -87,6 +107,7 @@ mod test {
     use super::*;
 
     use std::io::BufReader;
+    use std::str::FromStr;
 
     #[test]
     fn test_default() {
@@ -97,6 +118,10 @@ mod test {
         assert_eq!(DEFAULT_KNIT_CHAR, attrs.knit_char);
         assert_eq!(DEFAULT_PURL_CHAR, attrs.purl_char);
         assert_eq!(DEFAULT_EMPTY_CHAR, attrs.empty_char);
+        assert_eq!(
+            CssColor::from_str(DEFAULT_BACKGROUND_VALUE).unwrap(),
+            attrs.background_color
+        );
     }
 
     #[test]
@@ -118,6 +143,7 @@ columns=64
 knit=SPACE
 purl=X
 empty=#
+backgroundcolor=sienna
 "#;
         let hdr = dbg!(Header::new(&mut BufReader::new(header_str.as_bytes()))).unwrap();
         let attrs = Attributes::new(hdr).unwrap();
@@ -127,5 +153,14 @@ empty=#
         assert_eq!(' ', attrs.knit_char);
         assert_eq!('X', attrs.purl_char);
         assert_eq!('#', attrs.empty_char);
+        assert_eq!(
+            CssColor {
+                r: 0xa0,
+                g: 0x52,
+                b: 0x2d,
+                a: 1.0
+            },
+            attrs.background_color
+        );
     }
 }

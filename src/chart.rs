@@ -3,6 +3,8 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::iter::{repeat, repeat_with};
 
+use css_color_parser::Color as CssColor;
+
 use crate::attributes::Attributes;
 use crate::errors::*;
 use crate::header::Header;
@@ -81,6 +83,7 @@ impl Chart {
     pub fn columns(&self) -> usize {
         self.cols
     }
+    pub fn background_color(&self) -> CssColor { self.attributes.background_color }
 
     pub fn stitch(&self, row: usize, col: usize) -> Stitch {
         self.stitches[row][col]

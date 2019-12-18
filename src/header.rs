@@ -60,7 +60,7 @@ impl Header {
         self.attributes.iter()
     }
 
-    #[test]
+    #[cfg(test)]
     pub fn value(&self, name: &str) -> Option<&str> {
         if let Some(line) = self.attributes.get(name) {
             Some(&line.value)
@@ -69,7 +69,7 @@ impl Header {
         }
     }
 
-    #[test]
+    #[cfg(test)]
     fn num_attributes(&self) -> usize {
         self.attributes.len()
     }

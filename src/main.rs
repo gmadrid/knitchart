@@ -3,14 +3,26 @@ use std::convert::TryInto;
 use std::env;
 use std::path::PathBuf;
 
+use css_color_parser::Color as CssColor;
 use graphics::grid::Grid;
 use graphics::line::Line;
 use graphics_buffer::{RenderBuffer, IDENTITY};
-
 use knitchart::errors::*;
 use knitchart::{Chart, Stitch};
 
+fn to_color_array(color: CssColor) -> graphics::types::Color {
+    use graphics::types::ColorComponent;
+
+    [
+        ColorComponent::from(color.r) / 255.0,
+        ColorComponent::from(color.g) / 255.0,
+        ColorComponent::from(color.b) / 255.0,
+        color.a,
+        ]
+}
+
 fn the_thing(filename: &str, chart: &Chart) {
+    let background_color = to_color_array(chart.background_color());
     let dot_radius = 10.0;
     let cell_size = 15u32;
 
@@ -20,7 +32,7 @@ fn the_thing(filename: &str, chart: &Chart) {
     // TODO: make chart return u32 for rows()/columns().
     let mut buffer = RenderBuffer::new(cols * cell_size, rows * cell_size);
 
-    buffer.clear([0.9, 0.9, 0.9, 1.0]);
+    buffer.clear(background_color);
 
     let grid = Grid {
         cols: cols,
