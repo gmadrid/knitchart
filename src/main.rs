@@ -1,15 +1,15 @@
-use std::env;
 use std::convert::TryFrom;
 use std::convert::TryInto;
+use std::env;
 use std::path::PathBuf;
 
 use graphics::grid::Grid;
 use graphics::line::Line;
-use graphics_buffer::{IDENTITY, RenderBuffer};
+use graphics_buffer::{RenderBuffer, IDENTITY};
 
 use crate::chart::Chart;
-use crate::errors::*;
 use crate::chart::Stitch;
+use crate::errors::*;
 
 #[macro_use]
 extern crate error_chain;
@@ -69,34 +69,37 @@ fn the_thing(filename: &str, chart: &Chart) {
     let cols = u32::try_from(chart.columns()).unwrap();
 
     // TODO: make chart return u32 for rows()/columns().
-    let mut buffer = RenderBuffer::new(cols * cell_size,
-				       rows * cell_size);
-    
+    let mut buffer = RenderBuffer::new(cols * cell_size, rows * cell_size);
+
     buffer.clear([0.9, 0.9, 0.9, 1.0]);
 
-    let grid = Grid{cols: cols, rows: rows, units: f64::from(cell_size)};
+    let grid = Grid {
+        cols: cols,
+        rows: rows,
+        units: f64::from(cell_size),
+    };
     let line = Line::new([0.1, 0.1, 0.1, 1.0], 1.0);
     grid.draw(&line, &Default::default(), IDENTITY, &mut buffer);
 
     for cell in grid.cells() {
-	let (col, row) = cell;
-	let cell_pos = grid.cell_position(cell);
+        let (col, row) = cell;
+        let cell_pos = grid.cell_position(cell);
 
-	let center_y = cell_pos[0] + f64::from(cell_size) / 2.0;
-	let center_x = cell_pos[1] + f64::from(cell_size) / 2.0;
+        let center_y = cell_pos[0] + f64::from(cell_size) / 2.0;
+        let center_x = cell_pos[1] + f64::from(cell_size) / 2.0;
 
-	let stitch = chart.stitch(row.try_into().unwrap(), col.try_into().unwrap());
+        let stitch = chart.stitch(row.try_into().unwrap(), col.try_into().unwrap());
 
-	if let Stitch::Purl = stitch {
-	    let rectangle = [
-		center_y - dot_radius / 2.0,
-		center_x - dot_radius / 2.0,
-		dot_radius,
-		dot_radius
-	    ];
-	    println!("{:?}", cell_pos);
-	    graphics::ellipse([0.1, 0.1, 0.1, 1.0], rectangle, IDENTITY, &mut buffer);
-	}
+        if let Stitch::Purl = stitch {
+            let rectangle = [
+                center_y - dot_radius / 2.0,
+                center_x - dot_radius / 2.0,
+                dot_radius,
+                dot_radius,
+            ];
+            println!("{:?}", cell_pos);
+            graphics::ellipse([0.1, 0.1, 0.1, 1.0], rectangle, IDENTITY, &mut buffer);
+        }
     }
 
     let outfile = PathBuf::from(filename).with_extension("png");

@@ -83,7 +83,7 @@ impl Chart {
     }
 
     pub fn stitch(&self, row: usize, col: usize) -> Stitch {
-	self.stitches[row][col]
+        self.stitches[row][col]
     }
 
     fn read_stitches(
