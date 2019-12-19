@@ -1,5 +1,6 @@
-use css_color_parser::Color as CssColor;
+use std::collections::HashMap;
 
+use css_color_parser::Color as CssColor;
 
 use crate::errors::*;
 use crate::header::Header;
@@ -54,46 +55,54 @@ impl UnpackParsedValue for CssColor {
 }
 
 type ParserType = dyn Sync + (Fn(&str) -> Result<ParsedValue>);
+type SetterType = dyn Sync + (Fn(&mut Attributes, ParsedValue));
 struct AttributeSpec {
     name: &'static str,
     default_value: &'static str,
     parser: &'static ParserType,
+    setter: &'static SetterType,
 }
 
 static ROWS_ATTR_SPEC: AttributeSpec = AttributeSpec {
     name: "rows",
     default_value: "0",
     parser: &|s| Ok(ParsedValue::UsizeValue(s.parse()?)),
+    setter: &|a, pv| a.rows = UnpackParsedValue::unpack(pv),
 };
 
 static COLS_ATTR_SPEC: AttributeSpec = AttributeSpec {
     name: "columns",
     default_value: "0",
     parser: &|s| Ok(ParsedValue::UsizeValue(s.parse()?)),
+    setter: &|a, pv| a.cols = UnpackParsedValue::unpack(pv),
 };
 
 static KNIT_ATTR_SPEC: AttributeSpec = AttributeSpec {
     name: "knit",
     default_value: ".",
-    parser: &|s| Ok(ParsedValue::CharValue(parse_char_name(s)?))
+    parser: &|s| Ok(ParsedValue::CharValue(parse_char_name(s)?)),
+    setter: &|a, pv| a.knit_char = UnpackParsedValue::unpack(pv),
 };
 
 static PURL_ATTR_SPEC: AttributeSpec = AttributeSpec {
     name: "purl",
     default_value: "X",
-    parser: &|s| Ok(ParsedValue::CharValue(parse_char_name(s)?))
+    parser: &|s| Ok(ParsedValue::CharValue(parse_char_name(s)?)),
+    setter: &|a, pv| a.purl_char = UnpackParsedValue::unpack(pv),
 };
 
 static EMPTY_ATTR_SPEC: AttributeSpec = AttributeSpec {
     name: "empty",
     default_value: "SPACE",
-    parser: &|s| Ok(ParsedValue::CharValue(parse_char_name(s)?))
+    parser: &|s| Ok(ParsedValue::CharValue(parse_char_name(s)?)),
+    setter: &|a, pv| a.empty_char = UnpackParsedValue::unpack(pv),
 };
 
 static BACKGROUND_COLOR_ATTR_SPEC: AttributeSpec = AttributeSpec {
     name: "backgroundcolor",
     default_value: "whitesmoke",
     parser: &|s| Ok(ParsedValue::ColorValue(s.parse()?)),
+    setter: &|a, pv| a.background_color = UnpackParsedValue::unpack(pv),
 };
 
 impl AttributeSpec {
@@ -102,23 +111,27 @@ impl AttributeSpec {
         UnpackParsedValue::unpack((self.parser)(self.default_value).unwrap())
     }
 
+    fn set_with_str(&'static self, attributes: &mut Attributes, s: &str) {
+        (self.setter)(attributes, (self.parser)(s).unwrap());
+    }
 
-//    fn insert(&'static self, map: &mut HashMap<&'static str, &'static AttributeSpec>) {
-//        map.insert(self.name, self);
-//    }
+    fn insert(&'static self, map: &mut HashMap<&'static str, &'static AttributeSpec>) {
+        map.insert(self.name, self);
+    }
 }
-//
-//lazy_static! {
-//    static ref ATTRIBUTE_MAP: HashMap<&'static str, &'static AttributeSpec> = {
-//        let mut map = HashMap::new();
-//        ROWS_ATTR_SPEC.insert(&mut map);
-//        COLS_ATTR_SPEC.insert(&mut map);
-//        KNIT_ATTR_SPEC.insert(&mut map);
-//        PURL_ATTR_SPEC.insert(&mut map);
-//        EMPTY_ATTR_SPEC.insert(&mut map);
-//        map
-//    };
-//}
+
+lazy_static! {
+    static ref ATTRIBUTE_MAP: HashMap<&'static str, &'static AttributeSpec> = {
+        let mut map = HashMap::new();
+        ROWS_ATTR_SPEC.insert(&mut map);
+        COLS_ATTR_SPEC.insert(&mut map);
+        KNIT_ATTR_SPEC.insert(&mut map);
+        PURL_ATTR_SPEC.insert(&mut map);
+        EMPTY_ATTR_SPEC.insert(&mut map);
+        BACKGROUND_COLOR_ATTR_SPEC.insert(&mut map);
+        map
+    };
+}
 
 fn parse_char_name(s: &str) -> Result<char> {
     if s.is_empty() {
@@ -165,27 +178,11 @@ impl Attributes {
     }
 
     fn set_value_with_name(&mut self, name: &str, value: &str) -> Result<()> {
-        // TODO: Ugh. Replace this with something more elegant, like the map approach.
-        match name {
-            _ if name == ROWS_ATTR_SPEC.name =>
-                    Ok(self.rows = UnpackParsedValue::unpack((ROWS_ATTR_SPEC.parser)(value)?)),
-            _ if name == COLS_ATTR_SPEC.name =>
-                Ok(self.cols = UnpackParsedValue::unpack((COLS_ATTR_SPEC.parser)(value)?)),
-            _ if name == KNIT_ATTR_SPEC.name =>
-                Ok(self.knit_char = UnpackParsedValue::unpack((KNIT_ATTR_SPEC.parser)(value)?)),
-            _ if name == PURL_ATTR_SPEC.name =>
-                Ok(self.purl_char = UnpackParsedValue::unpack((PURL_ATTR_SPEC.parser)(value)?)),
-            _ if name == EMPTY_ATTR_SPEC.name =>
-                Ok(self.empty_char = UnpackParsedValue::unpack((EMPTY_ATTR_SPEC.parser)(value)?)),
-            _ if name == BACKGROUND_COLOR_ATTR_SPEC.name =>
-                Ok(self.background_color = UnpackParsedValue::unpack((BACKGROUND_COLOR_ATTR_SPEC.parser)(value)?)),
-            _ => unimplemented!("TODO put a decent error here."),
+        let spec = ATTRIBUTE_MAP.get(name);
+        match spec {
+            None => Err(ErrorKind::UnknownAttrName(name.into()).into()),
+            Some(s) => Ok(s.set_with_str(self, value)),
         }
-//        let spec = ATTRIBUTE_MAP.get(name);
-//        match spec {
-//            None => Err(ErrorKind::UnknownAttrName(name.into()).into()),
-//            Some(s) => (s.setter)(&mut self, value)
-//        }
     }
 }
 
