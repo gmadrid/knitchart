@@ -1,5 +1,5 @@
 use css_color_parser::Color as CssColor;
-use std::collections::HashMap;
+
 
 use crate::errors::*;
 use crate::header::Header;
