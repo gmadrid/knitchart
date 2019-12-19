@@ -18,7 +18,7 @@ fn to_color_array(color: CssColor) -> graphics::types::Color {
         ColorComponent::from(color.g) / 255.0,
         ColorComponent::from(color.b) / 255.0,
         color.a,
-        ]
+    ]
 }
 
 fn the_thing(filename: &str, chart: &Chart) {

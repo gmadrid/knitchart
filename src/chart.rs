@@ -83,7 +83,9 @@ impl Chart {
     pub fn columns(&self) -> usize {
         self.cols
     }
-    pub fn background_color(&self) -> CssColor { self.attributes.background_color }
+    pub fn background_color(&self) -> CssColor {
+        self.attributes.background_color
+    }
 
     pub fn stitch(&self, row: usize, col: usize) -> Stitch {
         self.stitches[row][col]
