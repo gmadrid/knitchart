@@ -63,20 +63,52 @@ struct AttributeSpec {
     setter: &'static SetterType,
 }
 
-static ROWS_ATTR_SPEC: AttributeSpec = AttributeSpec {
-    name: "rows",
-    default_value: "0",
-    parser: &|s| Ok(ParsedValue::UsizeValue(s.parse()?)),
-    setter: &|a, pv| a.rows = UnpackParsedValue::unpack(pv),
-};
+//trace_macros!(true);
 
-static COLS_ATTR_SPEC: AttributeSpec = AttributeSpec {
-    name: "columns",
-    default_value: "0",
-    parser: &|s| Ok(ParsedValue::UsizeValue(s.parse()?)),
-    setter: &|a, pv| a.cols = UnpackParsedValue::unpack(pv),
-};
+macro_rules! attrib {
+    ($s: ident, $n:ident, $d:expr, $f:ident) => {
+            static $s: AttributeSpec = AttributeSpec {
+                name: std::stringify!($n),
+                default_value: $d,
+                parser: &|s| Ok(ParsedValue::UsizeValue(s.parse()?)),
+                setter: &|a, pv| a.$f = UnpackParsedValue::unpack(pv),
+            };
+    };
+}
 
+attrib!(ROWS_ATTR_SPEC, rows, "0", rows);
+attrib!(COLS_ATTR_SPEC, columns, "0", cols);
+
+//trace_macros!(false);
+
+/*
+  I would like something like:
+
+  attrib!(foo, value, UsizeValue)
+
+  to expand to:
+
+  static FOO_ATTR_SPEC: AttributeSpec = AttributeSpec {
+    name: "foo",
+    default_value: "value",
+    parser: &|s| Ok(ParsedValue::UsizeValue(s.parse()?)),
+    setter: &|a, pv| a.foo = UnpackParsedValue::unpack(pv),
+  };
+*/
+//static ROWS_ATTR_SPEC: AttributeSpec = AttributeSpec {
+//    name: "rows",
+//    default_value: "0",
+//    parser: &|s| Ok(ParsedValue::UsizeValue(s.parse()?)),
+//    setter: &|a, pv| a.rows = UnpackParsedValue::unpack(pv),
+//};
+//
+//static COLS_ATTR_SPEC: AttributeSpec = AttributeSpec {
+//    name: "columns",
+//    default_value: "0",
+//    parser: &|s| Ok(ParsedValue::UsizeValue(s.parse()?)),
+//    setter: &|a, pv| a.cols = UnpackParsedValue::unpack(pv),
+//};
+//
 static KNIT_ATTR_SPEC: AttributeSpec = AttributeSpec {
     name: "knit",
     default_value: ".",
