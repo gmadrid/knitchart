@@ -111,9 +111,9 @@ impl Chart {
 
         for ch in line.chars() {
             let stitch = match ch {
-                c if c == attributes.knit_char => Stitch::Knit,
-                c if c == attributes.purl_char => Stitch::Purl,
-                c if c == attributes.empty_char => Stitch::Empty,
+                c if c == attributes.knit => Stitch::Knit,
+                c if c == attributes.purl => Stitch::Purl,
+                c if c == attributes.empty => Stitch::Empty,
                 _ => return Err(ErrorKind::BadStitchChar.into()),
             };
             stitch_vec.push(stitch);
@@ -171,9 +171,9 @@ fn figure_out_rows(attributes: &Attributes, stitches: &Vec<Vec<Stitch>>) -> usiz
 }
 
 fn figure_out_cols(attributes: &Attributes, stitches: &Vec<Vec<Stitch>>) -> usize {
-    if attributes.cols == 0 {
+    if attributes.columns == 0 {
         stitches.iter().map(|v| v.len()).max().unwrap_or(0)
     } else {
-        attributes.cols
+        attributes.columns
     }
 }

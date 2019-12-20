@@ -157,7 +157,7 @@ where
         }
 
         for ch in iter {
-            if !ch.is_ascii_alphanumeric() {
+            if !ch.is_ascii_alphanumeric() && ch != '_' {
                 return Err(ErrorKind::IdentInvalidChar(self.current_line_number).into());
             }
         }

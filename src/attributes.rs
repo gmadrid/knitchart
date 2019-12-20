@@ -63,82 +63,42 @@ struct AttributeSpec {
     setter: &'static SetterType,
 }
 
-//trace_macros!(true);
-
 macro_rules! attrib {
-    ($s: ident, $n:ident, $d:expr, $f:ident) => {
-            static $s: AttributeSpec = AttributeSpec {
-                name: std::stringify!($n),
-                default_value: $d,
-                parser: &|s| Ok(ParsedValue::UsizeValue(s.parse()?)),
-                setter: &|a, pv| a.$f = UnpackParsedValue::unpack(pv),
-            };
+    ($spec_name: ident, $name:ident, $default:expr, $valuetype: ident) => {
+        static $spec_name: AttributeSpec = AttributeSpec {
+            name: std::stringify!($name),
+            default_value: $default,
+            parser: &|s| Ok(ParsedValue::$valuetype(s.parse()?)),
+            setter: &|a, pv| a.$name = UnpackParsedValue::unpack(pv),
+        };
+    };
+    ($spec_name: ident, $name:ident, $default:expr, $valuetype: ident ($parsefunc: ident)) => {
+        static $spec_name: AttributeSpec = AttributeSpec {
+            name: std::stringify!($name),
+            default_value: $default,
+            parser: &|s| Ok(ParsedValue::$valuetype($parsefunc(s)?)),
+            setter: &|a, pv| a.$name = UnpackParsedValue::unpack(pv),
+        };
     };
 }
 
-attrib!(ROWS_ATTR_SPEC, rows, "0", rows);
-attrib!(COLS_ATTR_SPEC, columns, "0", cols);
-
-//trace_macros!(false);
-
-/*
-  I would like something like:
-
-  attrib!(foo, value, UsizeValue)
-
-  to expand to:
-
-  static FOO_ATTR_SPEC: AttributeSpec = AttributeSpec {
-    name: "foo",
-    default_value: "value",
-    parser: &|s| Ok(ParsedValue::UsizeValue(s.parse()?)),
-    setter: &|a, pv| a.foo = UnpackParsedValue::unpack(pv),
-  };
-*/
-//static ROWS_ATTR_SPEC: AttributeSpec = AttributeSpec {
-//    name: "rows",
-//    default_value: "0",
-//    parser: &|s| Ok(ParsedValue::UsizeValue(s.parse()?)),
-//    setter: &|a, pv| a.rows = UnpackParsedValue::unpack(pv),
-//};
-//
-//static COLS_ATTR_SPEC: AttributeSpec = AttributeSpec {
-//    name: "columns",
-//    default_value: "0",
-//    parser: &|s| Ok(ParsedValue::UsizeValue(s.parse()?)),
-//    setter: &|a, pv| a.cols = UnpackParsedValue::unpack(pv),
-//};
-//
-static KNIT_ATTR_SPEC: AttributeSpec = AttributeSpec {
-    name: "knit",
-    default_value: ".",
-    parser: &|s| Ok(ParsedValue::CharValue(parse_char_name(s)?)),
-    setter: &|a, pv| a.knit_char = UnpackParsedValue::unpack(pv),
-};
-
-static PURL_ATTR_SPEC: AttributeSpec = AttributeSpec {
-    name: "purl",
-    default_value: "X",
-    parser: &|s| Ok(ParsedValue::CharValue(parse_char_name(s)?)),
-    setter: &|a, pv| a.purl_char = UnpackParsedValue::unpack(pv),
-};
-
-static EMPTY_ATTR_SPEC: AttributeSpec = AttributeSpec {
-    name: "empty",
-    default_value: "SPACE",
-    parser: &|s| Ok(ParsedValue::CharValue(parse_char_name(s)?)),
-    setter: &|a, pv| a.empty_char = UnpackParsedValue::unpack(pv),
-};
-
-static BACKGROUND_COLOR_ATTR_SPEC: AttributeSpec = AttributeSpec {
-    name: "backgroundcolor",
-    default_value: "whitesmoke",
-    parser: &|s| Ok(ParsedValue::ColorValue(s.parse()?)),
-    setter: &|a, pv| a.background_color = UnpackParsedValue::unpack(pv),
-};
+attrib!(ROWS_ATTR_SPEC, rows, "0", UsizeValue);
+attrib!(COLS_ATTR_SPEC, columns, "0", UsizeValue);
+attrib!(
+    BACKGROUND_COLOR_ATTR_SPEC,
+    background_color,
+    "whitesmoke",
+    ColorValue
+);
+attrib!(KNIT_ATTR_SPEC, knit, ".", CharValue(parse_char_name));
+attrib!(PURL_ATTR_SPEC, purl, "X", CharValue(parse_char_name));
+attrib!(EMPTY_ATTR_SPEC, empty, "SPACE", CharValue(parse_char_name));
 
 impl AttributeSpec {
-    fn parsed_default<T>(&'static self) -> T where T: UnpackParsedValue {
+    fn parsed_default<T>(&'static self) -> T
+    where
+        T: UnpackParsedValue,
+    {
         // unwrap: safe because default values should parse or it's a programmer error.
         UnpackParsedValue::unpack((self.parser)(self.default_value).unwrap())
     }
@@ -189,11 +149,11 @@ fn parse_char_name(s: &str) -> Result<char> {
 #[derive(Debug)]
 pub struct Attributes {
     pub rows: usize,
-    pub cols: usize,
+    pub columns: usize,
 
-    pub knit_char: char,
-    pub purl_char: char,
-    pub empty_char: char,
+    pub knit: char,
+    pub purl: char,
+    pub empty: char,
 
     pub background_color: CssColor,
 }
@@ -222,10 +182,10 @@ impl Default for Attributes {
     fn default() -> Attributes {
         Attributes {
             rows: ROWS_ATTR_SPEC.parsed_default(),
-            cols: COLS_ATTR_SPEC.parsed_default(),
-            knit_char: KNIT_ATTR_SPEC.parsed_default(),
-            purl_char: PURL_ATTR_SPEC.parsed_default(),
-            empty_char: EMPTY_ATTR_SPEC.parsed_default(),
+            columns: COLS_ATTR_SPEC.parsed_default(),
+            knit: KNIT_ATTR_SPEC.parsed_default(),
+            purl: PURL_ATTR_SPEC.parsed_default(),
+            empty: EMPTY_ATTR_SPEC.parsed_default(),
             background_color: BACKGROUND_COLOR_ATTR_SPEC.parsed_default(),
         }
     }
@@ -243,10 +203,10 @@ mod test {
         let attrs = Attributes::default();
 
         assert_eq!(0, attrs.rows);
-        assert_eq!(0, attrs.cols);
-        assert_eq!('.', attrs.knit_char);
-        assert_eq!('X', attrs.purl_char);
-        assert_eq!(' ', attrs.empty_char);
+        assert_eq!(0, attrs.columns);
+        assert_eq!('.', attrs.knit);
+        assert_eq!('X', attrs.purl);
+        assert_eq!(' ', attrs.empty);
         assert_eq!(
             CssColor::from_str("whitesmoke").unwrap(),
             attrs.background_color
@@ -272,16 +232,16 @@ columns=64
 knit=SPACE
 purl=X
 empty=#
-backgroundcolor=sienna
+background_color=sienna
 "#;
         let hdr = Header::new(&mut BufReader::new(header_str.as_bytes())).unwrap();
         let attrs = Attributes::new(hdr).unwrap();
 
         assert_eq!(32, attrs.rows);
-        assert_eq!(64, attrs.cols);
-        assert_eq!(' ', attrs.knit_char);
-        assert_eq!('X', attrs.purl_char);
-        assert_eq!('#', attrs.empty_char);
+        assert_eq!(64, attrs.columns);
+        assert_eq!(' ', attrs.knit);
+        assert_eq!('X', attrs.purl);
+        assert_eq!('#', attrs.empty);
         assert_eq!(
             CssColor {
                 r: 0xa0,
