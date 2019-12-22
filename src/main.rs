@@ -25,7 +25,8 @@ fn to_color_array(color: CssColor) -> graphics::types::Color {
 fn the_thing(filename: &str, chart: &Chart) -> Result<()> {
     let background_color = to_color_array(chart.background_color());
     let dot_radius = 10.0;
-    let cell_size = 15u32;
+    let cell_size = chart.cell_size();
+    let grid_color = to_color_array(chart.grid_color());
 
     let rows = u32::try_from(chart.rows())?;
     let cols = u32::try_from(chart.columns())?;
@@ -40,7 +41,7 @@ fn the_thing(filename: &str, chart: &Chart) -> Result<()> {
         rows: rows,
         units: f64::from(cell_size),
     };
-    let line = Line::new([0.1, 0.1, 0.1, 1.0], 1.0);
+    let line = Line::new(grid_color, 1.0);
     grid.draw(&line, &Default::default(), IDENTITY, &mut buffer);
 
     for cell in grid.cells() {

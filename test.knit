@@ -1,7 +1,9 @@
 knit=.
 purl=*
 empty=#
-
+cell_size=30
+background_color=red
+grid_color=white
 CHART
 .......
 ...*...

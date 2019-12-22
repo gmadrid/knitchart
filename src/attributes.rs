@@ -95,7 +95,10 @@ mod test {
             CssColor::from_str("whitesmoke").unwrap(),
             attrs.background_color
         );
-        assert_eq!(CssColor::from_str("darkslategray").unwrap(), attrs.grid_color);
+        assert_eq!(
+            CssColor::from_str("darkslategray").unwrap(),
+            attrs.grid_color
+        );
         assert_eq!(false, attrs.in_the_round);
     }
 

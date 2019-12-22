@@ -77,6 +77,8 @@ impl Chart {
         Ok(chart)
     }
 
+    // TODO: I am addicted to macros. Make a passthrough macro that prevents writing lots of
+    //       passthrough methods.
     pub fn rows(&self) -> usize {
         self.rows
     }
@@ -85,6 +87,12 @@ impl Chart {
     }
     pub fn background_color(&self) -> CssColor {
         self.attributes.background_color
+    }
+    pub fn grid_color(&self) -> CssColor {
+        self.attributes.grid_color
+    }
+    pub fn cell_size(&self) -> u32 {
+        self.attributes.cell_size
     }
 
     pub fn stitch(&self, row: usize, col: usize) -> Stitch {
