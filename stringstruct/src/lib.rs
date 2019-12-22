@@ -186,11 +186,3 @@ pub fn derive(input: TokenStream) -> TokenStream {
 
     q.into()
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
