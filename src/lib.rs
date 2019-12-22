@@ -45,6 +45,7 @@ pub mod errors {
             ColorParseError(css_color_parser::ColorParseError);
             IoError(std::io::Error);
             ParseIntError(std::num::ParseIntError);
+            TryFromIntError(std::num::TryFromIntError);
         }
     }
 }

@@ -1,6 +1,7 @@
 use std::convert::TryFrom;
 use std::convert::TryInto;
 use std::env;
+use std::io::Write;
 use std::path::PathBuf;
 
 use css_color_parser::Color as CssColor;
@@ -21,13 +22,13 @@ fn to_color_array(color: CssColor) -> graphics::types::Color {
     ]
 }
 
-fn the_thing(filename: &str, chart: &Chart) {
+fn the_thing(filename: &str, chart: &Chart) -> Result<()> {
     let background_color = to_color_array(chart.background_color());
     let dot_radius = 10.0;
     let cell_size = 15u32;
 
-    let rows = u32::try_from(chart.rows()).unwrap();
-    let cols = u32::try_from(chart.columns()).unwrap();
+    let rows = u32::try_from(chart.rows())?;
+    let cols = u32::try_from(chart.columns())?;
 
     // TODO: make chart return u32 for rows()/columns().
     let mut buffer = RenderBuffer::new(cols * cell_size, rows * cell_size);
@@ -49,7 +50,7 @@ fn the_thing(filename: &str, chart: &Chart) {
         let center_y = cell_pos[0] + f64::from(cell_size) / 2.0;
         let center_x = cell_pos[1] + f64::from(cell_size) / 2.0;
 
-        let stitch = chart.stitch(row.try_into().unwrap(), col.try_into().unwrap());
+        let stitch = chart.stitch(row.try_into()?, col.try_into()?);
 
         if let Stitch::Purl = stitch {
             let rectangle = [
@@ -58,22 +59,25 @@ fn the_thing(filename: &str, chart: &Chart) {
                 dot_radius,
                 dot_radius,
             ];
-            println!("{:?}", cell_pos);
+            std::io::stdout().flush()?;
             graphics::ellipse([0.1, 0.1, 0.1, 1.0], rectangle, IDENTITY, &mut buffer);
         }
+        print!("\r{:?}          ", cell);
     }
-
+    print!("\r");
+    
     let outfile = PathBuf::from(filename).with_extension("png");
-    buffer.save(outfile).unwrap();
+    println!("Output file: {}", outfile.to_string_lossy());
+    Ok(buffer.save(outfile)?)
 }
 
 fn process_file(filename: &str) -> Result<()> {
     let chart = Chart::open(filename)?;
-    println!("Chart \"{}\":", filename);
+    println!("Chart: {}", filename);
     println!("     rows: {}", chart.rows());
     println!("  columns: {}", chart.columns());
 
-    the_thing(filename, &chart);
+    the_thing(filename, &chart)?;
 
     Ok(())
 }

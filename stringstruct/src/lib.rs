@@ -104,7 +104,7 @@ fn make_default_trait(
                 },
                 |val| {
                     if let Some(parse_func) = &am.parse_func {
-                        quote! { #parse_func(#val) }
+                        quote! { #parse_func(#val).unwrap() }
                     } else {
                         quote! { #val.parse().unwrap() }
                     }
@@ -140,7 +140,7 @@ fn make_set_value_func(
         .iter()
         .map(|am| {
             if let Some(parse_func) = &am.parse_func {
-                quote! { #parse_func(v) }
+                quote! { #parse_func(v).unwrap() }
             } else {
                 quote! { v.parse().unwrap() }
             }

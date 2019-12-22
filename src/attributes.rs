@@ -7,6 +7,7 @@ use crate::errors::*;
 use crate::header::Header;
 
 // Notes on new attributes
+//   round = true if in the round
 //   cellsize = dimensions of cell (square)
 //   background = color of the background
 //   gridcolor = color of the grid
@@ -18,29 +19,24 @@ use crate::header::Header;
 //   emptymarker = marker used for empty cells
 //       Ideally, we won't draw the empty cells.
 
-// TODO: make this return Result
-fn parse_char_name(s: &str) -> char {
+fn parse_char_name(s: &str) -> std::result::Result<char, String> {
     if s.is_empty() {
         // TODO: Get the line number in here.
-        //        return Err(ErrorKind::InvalidCharName.into());
-        panic!("foo");
+        return Err("Value for char cannot be empty string.".into());
     }
 
     // Special values
     match s.to_ascii_uppercase().as_str() {
-        "SPACE" => return ' ', //return Ok(' '),
+        "SPACE" => return Ok(' '),
         _ => { /* fall through */ }
     }
 
     if s.len() > 1 {
-        // TODO: Get the line number in here and the failing value.
-        panic!("bar");
-//        return Err(ErrorKind::InvalidCharName.into());
+        return Err(format!("'{}' is not a valid char name.", s));
     }
 
     // unwrap: string is not empty, so unwrap will work.
-    //    Ok(s.chars().next().unwrap())
-    s.chars().next().unwrap()
+    Ok(s.chars().next().unwrap())
 }
 
 #[derive(Debug, StringStruct)]
@@ -48,14 +44,14 @@ pub struct Attributes {
     pub rows: usize,
     pub columns: usize,
 
-    #[ssfield(default=".", parse="parse_char_name")]
+    #[ssfield(default = ".", parse = "parse_char_name")]
     pub knit: char,
-    #[ssfield(default="X", parse="parse_char_name")]
+    #[ssfield(default = "X", parse = "parse_char_name")]
     pub purl: char,
-    #[ssfield(default="SPACE", parse="parse_char_name")]
+    #[ssfield(default = "SPACE", parse = "parse_char_name")]
     pub empty: char,
 
-    #[ssfield(default="whitesmoke")]
+    #[ssfield(default = "whitesmoke")]
     pub background_color: CssColor,
 }
 
@@ -96,13 +92,13 @@ mod test {
 
     #[test]
     fn test_parse_char_name() {
-        assert_eq!(' ', parse_char_name(" "));
-        assert_eq!('.', parse_char_name("."));
+        assert_eq!(' ', parse_char_name(" ").unwrap());
+        assert_eq!('.', parse_char_name(".").unwrap());
 
-        assert_eq!(' ', parse_char_name("SPACE"));
+        assert_eq!(' ', parse_char_name("SPACE").unwrap());
 
-//        assert!(parse_char_name("").is_err());
-//        assert!(parse_char_name("XX").is_err());
+        assert!(parse_char_name("").is_err());
+        assert!(parse_char_name("XX").is_err());
     }
 
     #[test]
