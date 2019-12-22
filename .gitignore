@@ -1,6 +1,5 @@
 *.png
-target/*
-*/target/*
+target/
 *.lock
 .idea/
 *.iml
