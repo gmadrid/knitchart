@@ -7,10 +7,7 @@ use crate::errors::*;
 use crate::header::Header;
 
 // Notes on new attributes
-//   round = true if in the round
 //   cellsize = dimensions of cell (square)
-//   background = color of the background
-//   gridcolor = color of the grid
 //   knitcolor = color of the knit marker
 //   purlcolor = color of the purl marker
 //   emptycolor = color of the empty marker
@@ -51,8 +48,20 @@ pub struct Attributes {
     #[ssfield(default = "SPACE", parse = "parse_char_name")]
     pub empty: char,
 
+    // TODO: implement this.
+    #[ssfield(default = "15")]
+    pub cell_size: u32,
+
+    // TODO: implement this.
     #[ssfield(default = "whitesmoke")]
     pub background_color: CssColor,
+
+    // TODO: implement this.
+    #[ssfield(default = "#1A1A1A")]
+    pub grid_color: CssColor,
+
+    // TODO: implement this.
+    pub in_the_round: bool,
 }
 
 impl Attributes {
