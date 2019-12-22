@@ -43,7 +43,9 @@ pub struct Attributes {
     pub columns: usize,
 
     #[ssfield(default = "15")]
-    pub cell_size: u32,
+    pub cell_size: f64,
+    #[ssfield(default = "10")]
+    pub dot_size: f64,
 
     #[ssfield(default = ".", parse = "parse_char_name")]
     pub knit: char,
@@ -87,7 +89,8 @@ mod test {
 
         assert_eq!(0, attrs.rows);
         assert_eq!(0, attrs.columns);
-        assert_eq!(15, attrs.cell_size);
+        assert_eq!(15.0, attrs.cell_size);
+        assert_eq!(10.0, attrs.dot_size);
         assert_eq!('.', attrs.knit);
         assert_eq!('X', attrs.purl);
         assert_eq!(' ', attrs.empty);
@@ -119,6 +122,7 @@ mod test {
 rows=32
 columns=64
 cell_size=25
+dot_size=15.5
 knit=SPACE
 purl=X
 empty=#
@@ -131,7 +135,8 @@ in_the_round=true
 
         assert_eq!(32, attrs.rows);
         assert_eq!(64, attrs.columns);
-        assert_eq!(25, attrs.cell_size);
+        assert_eq!(25.0, attrs.cell_size);
+        assert_eq!(15.5, attrs.dot_size);
         assert_eq!(' ', attrs.knit);
         assert_eq!('X', attrs.purl);
         assert_eq!('#', attrs.empty);

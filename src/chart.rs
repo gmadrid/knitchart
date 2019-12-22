@@ -91,9 +91,10 @@ impl Chart {
     pub fn grid_color(&self) -> CssColor {
         self.attributes.grid_color
     }
-    pub fn cell_size(&self) -> u32 {
+    pub fn cell_size(&self) -> f64 {
         self.attributes.cell_size
     }
+    pub fn dot_size(&self) -> f64 { self.attributes.dot_size }
 
     pub fn stitch(&self, row: usize, col: usize) -> Stitch {
         self.stitches[row][col]

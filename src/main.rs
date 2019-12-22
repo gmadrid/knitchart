@@ -24,15 +24,15 @@ fn to_color_array(color: CssColor) -> graphics::types::Color {
 
 fn the_thing(filename: &str, chart: &Chart) -> Result<()> {
     let background_color = to_color_array(chart.background_color());
-    let dot_radius = 10.0;
+    let dot_size = chart.dot_size();
     let cell_size = chart.cell_size();
     let grid_color = to_color_array(chart.grid_color());
 
     let rows = u32::try_from(chart.rows())?;
     let cols = u32::try_from(chart.columns())?;
 
-    // TODO: make chart return u32 for rows()/columns().
-    let mut buffer = RenderBuffer::new(cols * cell_size, rows * cell_size);
+    let cell_size_int = cell_size as u32;
+    let mut buffer = RenderBuffer::new(cols * cell_size_int, rows * cell_size_int);
 
     buffer.clear(background_color);
 
@@ -55,10 +55,10 @@ fn the_thing(filename: &str, chart: &Chart) -> Result<()> {
 
         if let Stitch::Purl = stitch {
             let rectangle = [
-                center_y - dot_radius / 2.0,
-                center_x - dot_radius / 2.0,
-                dot_radius,
-                dot_radius,
+                center_y - dot_size / 2.0,
+                center_x - dot_size / 2.0,
+                dot_size,
+                dot_size,
             ];
             std::io::stdout().flush()?;
             graphics::ellipse([0.1, 0.1, 0.1, 1.0], rectangle, IDENTITY, &mut buffer);

@@ -2,6 +2,7 @@ knit=.
 purl=*
 empty=#
 cell_size=30
+dot_size=25
 background_color=red
 grid_color=white
 CHART
