@@ -7,10 +7,8 @@ use crate::errors::*;
 use crate::header::Header;
 
 // Notes on new attributes
-//   round = true if in the round
-//   cellsize = dimensions of cell (square)
-//   background = color of the background
-//   gridcolor = color of the grid
+// TODO: In order to do all of these colors, StringStruct has
+//       to support Option<CssColor>
 //   knitcolor = color of the knit marker
 //   purlcolor = color of the purl marker
 //   emptycolor = color of the empty marker
@@ -44,6 +42,9 @@ pub struct Attributes {
     pub rows: usize,
     pub columns: usize,
 
+    #[ssfield(default = "15")]
+    pub cell_size: u32,
+
     #[ssfield(default = ".", parse = "parse_char_name")]
     pub knit: char,
     #[ssfield(default = "X", parse = "parse_char_name")]
@@ -53,6 +54,11 @@ pub struct Attributes {
 
     #[ssfield(default = "whitesmoke")]
     pub background_color: CssColor,
+
+    #[ssfield(default = "darkslategray")]
+    pub grid_color: CssColor,
+
+    pub in_the_round: bool,
 }
 
 impl Attributes {
@@ -81,6 +87,7 @@ mod test {
 
         assert_eq!(0, attrs.rows);
         assert_eq!(0, attrs.columns);
+        assert_eq!(15, attrs.cell_size);
         assert_eq!('.', attrs.knit);
         assert_eq!('X', attrs.purl);
         assert_eq!(' ', attrs.empty);
@@ -88,6 +95,8 @@ mod test {
             CssColor::from_str("whitesmoke").unwrap(),
             attrs.background_color
         );
+        assert_eq!(CssColor::from_str("darkslategray").unwrap(), attrs.grid_color);
+        assert_eq!(false, attrs.in_the_round);
     }
 
     #[test]
@@ -106,16 +115,20 @@ mod test {
         let header_str = r#"
 rows=32
 columns=64
+cell_size=25
 knit=SPACE
 purl=X
 empty=#
 background_color=sienna
+grid_color=crimson
+in_the_round=true
 "#;
         let hdr = Header::new(&mut BufReader::new(header_str.as_bytes())).unwrap();
         let attrs = Attributes::new(hdr).unwrap();
 
         assert_eq!(32, attrs.rows);
         assert_eq!(64, attrs.columns);
+        assert_eq!(25, attrs.cell_size);
         assert_eq!(' ', attrs.knit);
         assert_eq!('X', attrs.purl);
         assert_eq!('#', attrs.empty);
@@ -128,5 +141,7 @@ background_color=sienna
             },
             attrs.background_color
         );
+        assert_eq!(CssColor::from_str("crimson").unwrap(), attrs.grid_color);
+        assert_eq!(true, attrs.in_the_round);
     }
 }
