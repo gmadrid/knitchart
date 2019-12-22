@@ -55,10 +55,6 @@ pub struct Attributes {
     pub empty: char,
 
     // TODO: implement this.
-    #[ssfield(default = "15")]
-    pub cell_size: u32,
-
-    // TODO: implement this.
     #[ssfield(default = "whitesmoke")]
     pub background_color: CssColor,
 
