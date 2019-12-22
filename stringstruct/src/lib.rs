@@ -33,14 +33,15 @@ use proc_macro2::TokenStream as TokenStream2;
      }
 */
 
-#[derive(Debug, Default)]
-struct AttrMeta {
+#[derive(Debug)]
+struct FieldMeta<'a> {
+    field_name: &'a Ident,
     default_string: Option<String>,
     parse_func: Option<Ident>,
 }
 
-impl AttrMeta {
-    fn meta_for_field(field: &Field) -> AttrMeta {
+impl<'a> FieldMeta<'a> {
+    fn meta_for_field(field: &Field) -> FieldMeta {
         let my_attr = field.attrs.iter().find(|a| {
             if let Some(segment) = a.path.segments.first() {
                 if segment.ident == "ssfield" {
@@ -50,7 +51,11 @@ impl AttrMeta {
             false
         });
 
-        let mut attr_meta = AttrMeta::default();
+        let mut attr_meta = FieldMeta {
+            field_name: field.ident.as_ref().unwrap(),
+            default_string: None,
+            parse_func: None,
+        };
         my_attr.map(|attr| {
             if let Ok(Meta::List(metalist)) = attr.parse_meta() {
                 for nested_meta in &metalist.nested {
@@ -86,15 +91,10 @@ impl AttrMeta {
 
 fn make_default_trait(
     struct_name: &Ident,
-    fields: &Vec<&Field>,
-    field_names: &Vec<&Ident>,
+    field_meta: &Vec<FieldMeta>,
 ) -> TokenStream2 {
-    let meta_for_fields = fields
-        .iter()
-        .map(|f| AttrMeta::meta_for_field(f))
-        .collect::<Vec<_>>();
-
-    let default_exprs = meta_for_fields
+    let field_names = field_meta.iter().map(|fm| fm.field_name);
+    let default_exprs = field_meta
         .iter()
         .map(|am| {
             am.default_string.as_ref().map_or_else(
@@ -109,8 +109,7 @@ fn make_default_trait(
                     }
                 },
             )
-        })
-        .collect::<Vec<_>>();
+        });
 
     let q = quote! {
     impl Default for #struct_name {
@@ -126,16 +125,10 @@ fn make_default_trait(
 
 fn make_set_value_func(
     struct_name: &Ident,
-    fields: &Vec<&Field>,
-    field_names: &Vec<&Ident>,
+    field_meta: &Vec<FieldMeta>,
 ) -> TokenStream2 {
-    // TODO stop making this twice.
-    let meta_for_fields = fields
-        .iter()
-        .map(|f| AttrMeta::meta_for_field(f))
-        .collect::<Vec<_>>();
-
-    let parse_exprs = meta_for_fields
+    let field_names = field_meta.iter().map(|fm| fm.field_name);
+    let parse_exprs = field_meta
         .iter()
         .map(|am| {
             if let Some(parse_func) = &am.parse_func {
@@ -143,8 +136,7 @@ fn make_set_value_func(
             } else {
                 quote! { v.parse().unwrap() }
             }
-        })
-        .collect::<Vec<_>>();
+        });
 
     let if_statements = quote! {
         #(
@@ -165,31 +157,31 @@ fn make_set_value_func(
     q.into()
 }
 
-#[proc_macro_derive(StringStruct, attributes(ssfield))]
-pub fn derive(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-
-    let fields = match input.data {
+fn meta_for_fields(input: &DeriveInput) -> Vec<FieldMeta> {
+    match input.data {
         Data::Struct(ref data_struct) => data_struct
             .fields
             .iter()
+            // Filter out any fields without names.
             .filter(|f| f.ident.is_some())
-            .collect::<Vec<&Field>>(),
-        // TODO: produce a better error message.
+            .map(|f| FieldMeta::meta_for_field(f))
+            .collect::<Vec<_>>(),
+        // TODO: improve this error message.
         _ => panic!("This is only for structs."),
-    };
-    let field_names = fields
-        .iter()
-        .map(|f| f.ident.as_ref().unwrap())
-        .collect::<Vec<&Ident>>();
-    let default_trait = make_default_trait(&input.ident, &fields, &field_names);
+    }
+}
 
-    let set_value_func = make_set_value_func(&input.ident, &fields, &field_names);
+#[proc_macro_derive(StringStruct, attributes(ssfield))]
+pub fn derive(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let field_meta = meta_for_fields(&input);
+
+    let default_trait = make_default_trait(&input.ident, &field_meta);
+    let set_value_func = make_set_value_func(&input.ident, &field_meta);
 
     let q = quote! {
-    #default_trait
-
-    #set_value_func
+        #default_trait
+        #set_value_func
     };
 
     q.into()

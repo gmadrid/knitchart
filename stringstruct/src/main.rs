@@ -12,11 +12,11 @@ pub struct Attributes {
     color: CssColor,
 }
 
-fn parse_char_name(s: &str) -> char {
+fn parse_char_name(s: &str) -> std::result::Result<char, String> {
     if s == "SPACE" {
-        ' '
+        Ok(' ')
     } else {
-        s.parse().unwrap()
+        Ok(s.chars().next().unwrap())
     }
 }
 
