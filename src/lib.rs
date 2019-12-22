@@ -1,9 +1,6 @@
 #[macro_use]
 extern crate error_chain;
 
-#[macro_use]
-extern crate lazy_static;
-
 mod attributes;
 mod chart;
 mod header;

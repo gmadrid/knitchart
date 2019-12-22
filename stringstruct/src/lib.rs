@@ -44,7 +44,7 @@ impl AttrMeta {
     fn meta_for_field(field: &Field) -> AttrMeta {
         let my_attr = field.attrs.iter().find(|a| {
             if let Some(segment) = a.path.segments.first() {
-                if segment.ident == "attr" {
+                if segment.ident == "ssfield" {
                     return true;
                 }
             }
@@ -166,7 +166,7 @@ fn make_set_value_func(
     q.into()
 }
 
-#[proc_macro_derive(Attributes, attributes(attr))]
+#[proc_macro_derive(StringStruct, attributes(ssfield))]
 pub fn derive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 

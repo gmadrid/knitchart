@@ -1,14 +1,14 @@
 use css_color_parser::Color as CssColor;
-use macros::Attributes;
+use stringstruct::StringStruct;
 
-#[derive(Attributes, Debug)]
+#[derive(StringStruct, Debug)]
 pub struct Attributes {
     rows: usize,
-    #[attr(default = "64")]
+    #[ssfield(default = "64")]
     cols: usize,
-    #[attr(default = ".", parse = "parse_char_name")]
+    #[ssfield(default = ".", parse = "parse_char_name")]
     knit_char: char, // but uses special parser function
-    #[attr(default = "whitesmoke")]
+    #[ssfield(default = "whitesmoke")]
     color: CssColor,
 }
 

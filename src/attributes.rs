@@ -1,6 +1,7 @@
-use std::collections::HashMap;
+use std::default::Default;
 
 use css_color_parser::Color as CssColor;
+use stringstruct::StringStruct;
 
 use crate::errors::*;
 use crate::header::Header;
@@ -17,144 +18,44 @@ use crate::header::Header;
 //   emptymarker = marker used for empty cells
 //       Ideally, we won't draw the empty cells.
 
-enum ParsedValue {
-    UsizeValue(usize),
-    CharValue(char),
-    ColorValue(CssColor),
-}
-
-trait UnpackParsedValue {
-    fn unpack(pv: ParsedValue) -> Self;
-}
-
-impl UnpackParsedValue for usize {
-    fn unpack(pv: ParsedValue) -> usize {
-        match pv {
-            ParsedValue::UsizeValue(val) => val,
-            _ => unimplemented!("put in a good error here TODO"),
-        }
-    }
-}
-
-impl UnpackParsedValue for char {
-    fn unpack(pv: ParsedValue) -> char {
-        match pv {
-            ParsedValue::CharValue(val) => val,
-            _ => unimplemented!("put in a good error here TODO"),
-        }
-    }
-}
-
-impl UnpackParsedValue for CssColor {
-    fn unpack(pv: ParsedValue) -> CssColor {
-        match pv {
-            ParsedValue::ColorValue(val) => val,
-            _ => unimplemented!("put in a good error here TODO"),
-        }
-    }
-}
-
-type ParserType = dyn Sync + (Fn(&str) -> Result<ParsedValue>);
-type SetterType = dyn Sync + (Fn(&mut Attributes, ParsedValue));
-struct AttributeSpec {
-    name: &'static str,
-    default_value: &'static str,
-    parser: &'static ParserType,
-    setter: &'static SetterType,
-}
-
-macro_rules! attrib {
-    ($spec_name: ident, $name:ident, $default:expr, $valuetype: ident) => {
-        static $spec_name: AttributeSpec = AttributeSpec {
-            name: std::stringify!($name),
-            default_value: $default,
-            parser: &|s| Ok(ParsedValue::$valuetype(s.parse()?)),
-            setter: &|a, pv| a.$name = UnpackParsedValue::unpack(pv),
-        };
-    };
-    ($spec_name: ident, $name:ident, $default:expr, $valuetype: ident ($parsefunc: ident)) => {
-        static $spec_name: AttributeSpec = AttributeSpec {
-            name: std::stringify!($name),
-            default_value: $default,
-            parser: &|s| Ok(ParsedValue::$valuetype($parsefunc(s)?)),
-            setter: &|a, pv| a.$name = UnpackParsedValue::unpack(pv),
-        };
-    };
-}
-
-attrib!(ROWS_ATTR_SPEC, rows, "0", UsizeValue);
-attrib!(COLS_ATTR_SPEC, columns, "0", UsizeValue);
-attrib!(
-    BACKGROUND_COLOR_ATTR_SPEC,
-    background_color,
-    "whitesmoke",
-    ColorValue
-);
-attrib!(KNIT_ATTR_SPEC, knit, ".", CharValue(parse_char_name));
-attrib!(PURL_ATTR_SPEC, purl, "X", CharValue(parse_char_name));
-attrib!(EMPTY_ATTR_SPEC, empty, "SPACE", CharValue(parse_char_name));
-
-impl AttributeSpec {
-    fn parsed_default<T>(&'static self) -> T
-    where
-        T: UnpackParsedValue,
-    {
-        // unwrap: safe because default values should parse or it's a programmer error.
-        UnpackParsedValue::unpack((self.parser)(self.default_value).unwrap())
-    }
-
-    fn set_with_str(&'static self, attributes: &mut Attributes, s: &str) {
-        (self.setter)(attributes, (self.parser)(s).unwrap());
-    }
-
-    fn insert(&'static self, map: &mut HashMap<&'static str, &'static AttributeSpec>) {
-        map.insert(self.name, self);
-    }
-}
-
-lazy_static! {
-    static ref ATTRIBUTE_MAP: HashMap<&'static str, &'static AttributeSpec> = {
-        let mut map = HashMap::new();
-        ROWS_ATTR_SPEC.insert(&mut map);
-        COLS_ATTR_SPEC.insert(&mut map);
-        KNIT_ATTR_SPEC.insert(&mut map);
-        PURL_ATTR_SPEC.insert(&mut map);
-        EMPTY_ATTR_SPEC.insert(&mut map);
-        BACKGROUND_COLOR_ATTR_SPEC.insert(&mut map);
-        map
-    };
-}
-
-fn parse_char_name(s: &str) -> Result<char> {
+// TODO: make this return Result
+fn parse_char_name(s: &str) -> char {
     if s.is_empty() {
         // TODO: Get the line number in here.
-        return Err(ErrorKind::InvalidCharName.into());
+        //        return Err(ErrorKind::InvalidCharName.into());
+        panic!("foo");
     }
 
     // Special values
     match s.to_ascii_uppercase().as_str() {
-        "SPACE" => return Ok(' '),
+        "SPACE" => return ' ', //return Ok(' '),
         _ => { /* fall through */ }
     }
 
     if s.len() > 1 {
         // TODO: Get the line number in here and the failing value.
-        return Err(ErrorKind::InvalidCharName.into());
+        panic!("bar");
+//        return Err(ErrorKind::InvalidCharName.into());
     }
 
     // unwrap: string is not empty, so unwrap will work.
-    Ok(s.chars().next().unwrap())
+    //    Ok(s.chars().next().unwrap())
+    s.chars().next().unwrap()
 }
 
-#[derive(Debug)]
+#[derive(Debug, StringStruct)]
 pub struct Attributes {
     pub rows: usize,
     pub columns: usize,
 
+    #[ssfield(default=".", parse="parse_char_name")]
     pub knit: char,
+    #[ssfield(default="X", parse="parse_char_name")]
     pub purl: char,
+    #[ssfield(default="SPACE", parse="parse_char_name")]
     pub empty: char,
 
+    #[ssfield(default="whitesmoke")]
     pub background_color: CssColor,
 }
 
@@ -163,31 +64,11 @@ impl Attributes {
         let mut attrs = Attributes::default();
 
         for (name, line) in hdr.iter() {
-            attrs.set_value_with_name(name, &line.value)?;
+            // TODO: return a Result from set_value.
+            attrs.set_value(name, &line.value);
         }
 
         return Ok(attrs);
-    }
-
-    fn set_value_with_name(&mut self, name: &str, value: &str) -> Result<()> {
-        let spec = ATTRIBUTE_MAP.get(name);
-        match spec {
-            None => Err(ErrorKind::UnknownAttrName(name.into()).into()),
-            Some(s) => Ok(s.set_with_str(self, value)),
-        }
-    }
-}
-
-impl Default for Attributes {
-    fn default() -> Attributes {
-        Attributes {
-            rows: ROWS_ATTR_SPEC.parsed_default(),
-            columns: COLS_ATTR_SPEC.parsed_default(),
-            knit: KNIT_ATTR_SPEC.parsed_default(),
-            purl: PURL_ATTR_SPEC.parsed_default(),
-            empty: EMPTY_ATTR_SPEC.parsed_default(),
-            background_color: BACKGROUND_COLOR_ATTR_SPEC.parsed_default(),
-        }
     }
 }
 
@@ -215,13 +96,13 @@ mod test {
 
     #[test]
     fn test_parse_char_name() {
-        assert_eq!(' ', parse_char_name(" ").unwrap());
-        assert_eq!('.', parse_char_name(".").unwrap());
+        assert_eq!(' ', parse_char_name(" "));
+        assert_eq!('.', parse_char_name("."));
 
-        assert_eq!(' ', parse_char_name("SPACE").unwrap());
+        assert_eq!(' ', parse_char_name("SPACE"));
 
-        assert!(parse_char_name("").is_err());
-        assert!(parse_char_name("XX").is_err());
+//        assert!(parse_char_name("").is_err());
+//        assert!(parse_char_name("XX").is_err());
     }
 
     #[test]
