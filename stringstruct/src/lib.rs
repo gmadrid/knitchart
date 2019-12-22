@@ -7,30 +7,29 @@ use syn::{parse_macro_input, Data, DeriveInput, Field, Ident, Lit, Meta, NestedM
 use proc_macro2::TokenStream as TokenStream2;
 
 /*
- #[derive(Attributes)] will derive two things for the tagged struct:
+ #[derive(StringStruct)] will derive two things for the tagged struct:
  - the Default trait
- - a method, set_value(&mut self, name: &str, value: &str).
+ - a method, set_value(&mut self, name: &str, value: &str) -> Result<()>.
 
- Each field may be tagged with the 'attr' attribute which may contain
+ Each field may be tagged with the 'ssfield' attribute which may contain
  the following sub-attributes:
    default = a string literal that will be parsed to set the default value of that field.
    parse = a method that will be called to parse the string into the field value.
 
  E.g.:
-
-     #[derive(Attributes)]
+     #[derive(StringStruct)]
      pub struct Attributes {
 
-       rows: usize,  // default will be set with usize::default()
+       rows: usize,      // default will be set with usize::default()
 
-       #[attr(64)]
-       cols: usize,
+       #[ssfield(default = "64")]
+       cols: usize,      // default will be set with "64".parse()
 
-       #[attr('.', parse=parse_char_name)]
-       knit_char: char,  // but uses special parser function
+       #[ssfield(default = ".", parse="parse_char_name")]
+       knit_char: char,  // default will be set with parse_char_name(".")
 
-       #[attr("whitesmoke")]
-       color: CssColor,  // still using s.parse()?
+       #[ssfield(default = "whitesmoke")]
+       color: CssColor,  // still using "whitesmoke".parse()?
      }
 */
 

@@ -65,7 +65,7 @@ fn the_thing(filename: &str, chart: &Chart) -> Result<()> {
         print!("\r{:?}          ", cell);
     }
     print!("\r");
-    
+
     let outfile = PathBuf::from(filename).with_extension("png");
     println!("Output file: {}", outfile.to_string_lossy());
     Ok(buffer.save(outfile)?)
