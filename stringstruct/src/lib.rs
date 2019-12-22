@@ -138,19 +138,15 @@ fn make_set_value_func(
             }
         });
 
-    let if_statements = quote! {
-        #(
-        if std::stringify!(#field_names) == n {
-            self.#field_names = #parse_exprs;
-            return;
-        }
-        )*
-    };
-
     let q = quote! {
     impl #struct_name {
         fn set_value(&mut self, n: &str, v: &str) {
-        #if_statements
+        #(
+            if std::stringify!(#field_names) == n {
+                self.#field_names = #parse_exprs;
+                return;
+            }
+        )*
         }
     }
     };
