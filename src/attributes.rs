@@ -141,15 +141,7 @@ in_the_round=true
         assert_eq!(' ', attrs.knit);
         assert_eq!('X', attrs.purl);
         assert_eq!('#', attrs.empty);
-        assert_eq!(
-            CssColor {
-                r: 0xa0,
-                g: 0x52,
-                b: 0x2d,
-                a: 1.0
-            },
-            attrs.background_color
-        );
+        assert_eq!(CssColor::from_str("sienna").unwrap(), attrs.background_color);
         assert_eq!(CssColor::from_str("crimson").unwrap(), attrs.grid_color);
         assert_eq!(true, attrs.in_the_round);
     }
