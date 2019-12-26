@@ -2,7 +2,7 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput, Field, Fields};
+use syn::{parse_macro_input, Data, DeriveInput, Field, Fields, Ident, Type};
 
 fn get_named_fields_with_attr(input: &DeriveInput) -> std::result::Result<Vec<&Field>, String> {
     if let Data::Struct(data_struct) = &input.data {
@@ -32,6 +32,16 @@ fn get_named_fields_with_attr(input: &DeriveInput) -> std::result::Result<Vec<&F
     }
 }
 
+fn impl_for_field(type_name: &Ident, field: &Field) ->  proc_macro2::TokenStream {
+    dbg!(field);
+    let field_name = field.ident.as_ref().unwrap();
+
+    let name = field.ident.as_ref().unwrap();
+        quote! { impl #type_name {
+            fn #name() {}
+        } }
+}
+
 #[proc_macro_derive(PassThru, attributes(passthru))]
 pub fn derive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -46,17 +56,23 @@ pub fn derive(input: TokenStream) -> TokenStream {
             fn inner_field1(&self) -> field1_type { self.outer.inner; }
         }
     */
-    let field_names = fields.iter().map(|f| {
-        let name = f.ident.as_ref().unwrap();
-        quote! { #name }
-    });
-
+//    let field_names = fields.iter().map(|f| {
+//        let name = f.ident.as_ref().unwrap();
+//        quote! { #name }
+//    });
+//
+//    let q = quote! {
+//        impl #type_name {
+//            #(
+//                fn #field_names(&self) -> () {}
+//            )*
+//        }
+//    };
+    let impls = fields.iter().map(|fld| impl_for_field(type_name, fld));
     let q = quote! {
-        impl #type_name {
-            #(
-                fn #field_names(&self) -> () {}
-            )*
-        }
+        #(
+            #impls
+        )*
     };
 
     q.into()
