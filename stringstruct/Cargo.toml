@@ -7,6 +7,13 @@ edition = "2018"
 [lib]
 proc-macro = true
 
+[[test]]
+name = "tests"
+path = "tests/macro_tests.rs"
+
+[dev-dependencies]
+trybuild = "1.0"
+
 [dependencies]
 css-color-parser = ""
 proc-macro2 = "^1.0"
